@@ -44,7 +44,6 @@ public class Main2Activity extends AppCompatActivity {
         editText = (EditText) findViewById(R.id.editText);
         progressDialog = new ProgressDialog(this);
         if(firebaseAuth.getCurrentUser()!=null){
-            Toast.makeText(Main2Activity.this, "Already registered", Toast.LENGTH_SHORT).show();
             Intent in = new Intent(Main2Activity.this, MainActivity.class);
             startActivity(in);
         }

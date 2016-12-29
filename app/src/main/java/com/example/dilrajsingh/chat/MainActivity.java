@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -44,9 +45,10 @@ public class MainActivity extends AppCompatActivity {
     DatabaseReference databaseReference;
     FirebaseAuth firebaseAuth;
     FirebaseUser firebaseUser;
-    String id, em;
+    String id, em, status;
     DBHandler dbHandler;
     ArrayList<String> arr, arr2, as, chats;
+    ProgressDialog pd;
 
     protected boolean isEmpty(EditText editText){
 
@@ -79,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        pd = new ProgressDialog(MainActivity.this);
         arr = new ArrayList<>();
         isInFront = true;
         arr2 = new ArrayList<>();
@@ -95,24 +98,12 @@ public class MainActivity extends AppCompatActivity {
             em = firebaseAuth.getCurrentUser().getEmail();
             String[] temp = em.split("@");
             em = temp[0];
-            final ProgressDialog pd = new ProgressDialog(MainActivity.this);
-            pd.setCancelable(false);
-            pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            pd.setMessage("Loading");
-            pd.show();
-            /*Thread th = new Thread() {
-                @Override
-                public void run() {
-                    refresh();
-                    pd.dismiss();
-                }
-            };
-            th.start();*/
+            new rfsh().execute();
             databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if(!dataSnapshot.hasChild(em)){
-                        databaseReference.child(em).push().setValue(em);
+                        databaseReference.child(em).child("status").setValue("not online");
                     }
                 }
 
@@ -121,17 +112,8 @@ public class MainActivity extends AppCompatActivity {
 
                 }
             });
+            databaseReference.child(em).child("status").setValue("online");
             Toast.makeText(MainActivity.this, "Loading chats...", Toast.LENGTH_SHORT).show();
-            if(isNetworkAvailable()){
-                refresh();
-            }
-            else{
-                arr = dbHandler.databaseToName();
-                arr2 = dbHandler.databaseToPhone();
-                ArrayAdapter<String> add = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, dbHandler.databaseToPhone());
-                listView.setAdapter(add);
-            }
-            pd.dismiss();
             String refreshedToken = FirebaseInstanceId.getInstance().getToken();
             Log.d("refreshtoken", refreshedToken);
         }
@@ -148,6 +130,17 @@ public class MainActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
                 AlertDialog.Builder al1 = new AlertDialog.Builder(MainActivity.this);
                 String[] opt = {"Edit", "Delete", "About"};
+                databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        status = dataSnapshot.child(arr.get(position)).child("status").getValue().toString();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
                 ArrayAdapter<String> add = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_expandable_list_item_1, opt);
                 al1.setAdapter(add, new DialogInterface.OnClickListener() {
                     @Override
@@ -199,10 +192,10 @@ public class MainActivity extends AppCompatActivity {
                                 al.show();
                                 break;
                             case 2:
-                                AlertDialog.Builder qw = new AlertDialog.Builder(MainActivity.this);
+                                final AlertDialog.Builder qw = new AlertDialog.Builder(MainActivity.this);
                                 qw.setCancelable(true);
                                 qw.setTitle("Information");
-                                qw.setMessage("Name : " + arr2.get(position) + "\n" + "No. : " + arr.get(position));
+                                qw.setMessage("Name : " + arr2.get(position) + "\n" + "No. : " + arr.get(position) + "\n" + "Status : " + status);
                                 qw.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
@@ -230,36 +223,31 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_main, menu);
-        return true;
-    }
+    public class rfsh extends AsyncTask<Void, Void, Void>{
 
-    public void refresh(){
-        ValueEventListener valueEventListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                ProgressDialog pd = new ProgressDialog(MainActivity.this);
-                pd.setMessage("Loading Content");
-                pd.setCancelable(false);
-                items.clear();
-                arr.clear();
-                dbHandler.delTable();
-                chats.clear();
-                for(DataSnapshot data : dataSnapshot.getChildren()){
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            pd.setCancelable(false);
+            pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            pd.setMessage("Loading");
+            pd.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            ValueEventListener valueEventListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    items.clear();
+                    arr.clear();
+                    dbHandler.delTable();
+                    chats.clear();
+                    for(DataSnapshot data : dataSnapshot.getChildren()){
                         if(data.getKey().equals(em)) {
                             for (DataSnapshot post : data.getChildren()) {
                                 int count = 0;
-                                for(DataSnapshot dat : post.getChildren()){
-                                    for(DataSnapshot tm : dat.getChildren()){
-                                        //Toast.makeText(MainActivity.this, tm.child("read_token").getValue().toString(), Toast.LENGTH_SHORT).show();
-                                        //if(tm.child("read_token").getValue().toString().equals("Read")){
-//                                            count ++;
-//                                        }
-                                    }
-                                }
                                 try{
                                     ItemAdded ad = new ItemAdded();
                                     items.add(post.child("name").getValue().toString());
@@ -277,22 +265,41 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     }
-                    //ArrayAdapter<String> ad = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, items);
-                    //listView.setAdapter(ad);
                     arr = dbHandler.databaseToName();
                     arr2 = dbHandler.databaseToPhone();
                     ArrayAdapter<String> add = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, dbHandler.databaseToPhone());
                     listView.setAdapter(add);
+                    pd.dismiss();
+                    Toast.makeText(MainActivity.this, "Loaded", Toast.LENGTH_SHORT).show();
                 }
 
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-            }
-        };
-        databaseReference.addValueEventListener(valueEventListener);
-        Toast.makeText(MainActivity.this, "Loaded", Toast.LENGTH_SHORT).show();
+                }
+            };
+            databaseReference.addValueEventListener(valueEventListener);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        databaseReference.child(em).child("status").setValue("not online");
+        super.onBackPressed();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        return true;
     }
 
     @Override
@@ -306,9 +313,9 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Please check your network connection", Toast.LENGTH_SHORT).show();
                 }
                 break;
-            case R.id.buttonTest:
+            case R.id.buttonRfsh:
                 Toast.makeText(MainActivity.this, "Loading content, please wait...", Toast.LENGTH_SHORT).show();
-                refresh();
+                new rfsh().execute();
                 break;
         }
         return true;
@@ -342,16 +349,16 @@ public class MainActivity extends AppCompatActivity {
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             if (!dataSnapshot.hasChild(name)) {
                                 Toast.makeText(MainActivity.this, "The user " + name + " is not registered", Toast.LENGTH_SHORT).show();
-                            }
-                            else if (dataSnapshot.child(em).hasChild(name)) {
+                            } else if (dataSnapshot.child(em).hasChild(name)) {
                                 Toast.makeText(MainActivity.this, "This user is already in your list", Toast.LENGTH_SHORT).show();
+                            } else if (name.equals(em)) {
+                                Toast.makeText(MainActivity.this, "You cannot add yourself", Toast.LENGTH_SHORT).show();
                             } else {
                                 firebaseAuth = FirebaseAuth.getInstance();
                                 databaseReference = FirebaseDatabase.getInstance().getReference();
                                 FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
                                 databaseReference.child(em).child(name).setValue(itemAdded);
                                 dbHandler.addItem(itemAdded);
-                                refresh();
                                 Toast.makeText(MainActivity.this, "Added", Toast.LENGTH_SHORT).show();
                             }
                         }

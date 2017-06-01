@@ -270,7 +270,6 @@ public class MainActivity extends AppCompatActivity {
                     ArrayAdapter<String> add = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, dbHandler.databaseToPhone());
                     listView.setAdapter(add);
                     pd.dismiss();
-                    Toast.makeText(MainActivity.this, "Loaded", Toast.LENGTH_SHORT).show();
                 }
 
 
@@ -291,7 +290,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        databaseReference.child(em).child("status").setValue("not online");
+        if(isNetworkAvailable()){
+            databaseReference.child(em).child("status").setValue("not online");
+        }
         super.onBackPressed();
     }
 

@@ -19,7 +19,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
-public class Main2Activity extends AppCompatActivity {
+public class Main4Activity extends AppCompatActivity {
 
     Button button;
     EditText editText, editText2;
@@ -38,61 +38,72 @@ public class Main2Activity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main2);
+        setContentView(R.layout.activity_main4);
         firebaseAuth = FirebaseAuth.getInstance();
-        button = (Button) findViewById(R.id.button);
-        editText = (EditText) findViewById(R.id.editText);
-        editText2 = (EditText) findViewById(R.id.editText2);
+        button = (Button) findViewById(R.id.button_in);
+        editText = (EditText) findViewById(R.id.editText3);
+        editText2 = (EditText) findViewById(R.id.editText4);
         progressDialog = new ProgressDialog(this);
-        if(firebaseAuth.getCurrentUser()!=null){
-            Intent in = new Intent(Main2Activity.this, MainActivity.class);
-            startActivity(in);
-        }
     }
 
     protected boolean isEmpty(EditText editText){
         return editText.getText().toString().trim().length() == 0;
     }
 
-    public void onSignIn(View view){
-        Intent i = new Intent(this, Main4Activity.class);
+    public void onSignup(View view){
+        Intent i = new Intent(this, Main2Activity.class);
         startActivity(i);
     }
 
-    public void onSignUp(View view){
+    public void onSignin(View view){
         String email = editText.getText().toString();
         String pass = editText2.getText().toString();
         email += "@abc.com";
         if(isEmpty(editText) || isEmpty(editText2)){
-            Toast.makeText(Main2Activity.this, "Please enter valid information", Toast.LENGTH_SHORT).show();
+            Toast.makeText(Main4Activity.this, "Please enter valid information", Toast.LENGTH_SHORT).show();
         }
         else{
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.setMessage("Registering");
+            progressDialog.setMessage("Please wait");
             progressDialog.show();
             if(isNetworkAvailable()){
-                firebaseAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                firebaseAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if(task.isSuccessful()){
-                            Toast.makeText(Main2Activity.this, "Successful", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Main4Activity.this, "Successful", Toast.LENGTH_SHORT).show();
                             progressDialog.dismiss();
-                            Intent in = new Intent(Main2Activity.this, MainActivity.class);
+                            Intent in = new Intent(Main4Activity.this, MainActivity.class);
                             startActivity(in);
                         }
                         else{
-                            Toast.makeText(Main2Activity.this, "Failed", Toast.LENGTH_SHORT).show();
-                            Toast.makeText(Main2Activity.this, task.getException().toString().split(": ")[1], Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Main4Activity.this, "Failed", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Main4Activity.this, task.getException().toString().split(": ")[1], Toast.LENGTH_SHORT).show();
                             progressDialog.dismiss();
                         }
                     }
                 });
+                /*firebaseAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if(task.isSuccessful()){
+                            Toast.makeText(Main4Activity.this, "Successful", Toast.LENGTH_SHORT).show();
+                            progressDialog.dismiss();
+                            Intent in = new Intent(Main4Activity.this, MainActivity.class);
+                            startActivity(in);
+                        }
+                        else{
+                            Toast.makeText(Main4Activity.this, "Failed", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Main4Activity.this, task.getException().toString().split(": ")[1], Toast.LENGTH_SHORT).show();
+                            progressDialog.dismiss();
+                        }
+                    }
+                });*/
             }
             else {
-                Toast.makeText(Main2Activity.this, "Please check your network connection", Toast.LENGTH_SHORT).show();
+                Toast.makeText(Main4Activity.this, "Please check your network connection", Toast.LENGTH_SHORT).show();
             }
         }
-
     }
 
 }

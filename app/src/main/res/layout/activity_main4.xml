@@ -7,15 +7,15 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.example.dilrajsingh.groceryitems.MainActivity">
+    tools:context="com.example.dilrajsingh.groceryitems.Main4Activity">
 
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:id="@+id/editText"
+        android:id="@+id/editText3"
         android:hint="Enter your phone no."
-        android:layout_above="@+id/editText2"
+        android:layout_above="@+id/editText4"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginBottom="50dp"
@@ -26,7 +26,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:id="@+id/editText2"
+        android:id="@+id/editText4"
         android:hint="Enter your password"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -39,10 +39,10 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Sign Up"
-        android:layout_below="@+id/editText2"
-        android:id="@+id/button"
-        android:onClick="onSignUp"
+        android:text="Sign In"
+        android:layout_below="@+id/editText4"
+        android:id="@+id/button_in"
+        android:onClick="onSignin"
         android:layout_centerHorizontal="true"
         android:background="@drawable/btn_bg" />
 
@@ -50,9 +50,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:text="Tap here to sign in"
+        android:text="Tap here to sign up"
         android:layout_marginTop="20dp"
-        android:layout_below="@+id/button"
-        android:onClick="onSignIn"/>
+        android:layout_below="@+id/button_in"
+        android:onClick="onSignup"/>
 
 </RelativeLayout>

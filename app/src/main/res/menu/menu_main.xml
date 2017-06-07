@@ -6,9 +6,4 @@
         android:title="Add"
         app:showAsAction="always" />
 
-    <item
-        android:id="@+id/buttonRfsh"
-        android:title="Refresh"
-        app:showAsAction="always"/>
-
 </menu>

@@ -10,6 +10,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     FirebaseUser firebaseUser;
     String id, em, status;
     DBHandler dbHandler;
+    SwipeRefreshLayout swipeRefreshLayout;
     ArrayList<String> arr, arr2, as, chats;
     ProgressDialog pd;
 
@@ -85,11 +87,23 @@ public class MainActivity extends AppCompatActivity {
         arr = new ArrayList<>();
         isInFront = true;
         arr2 = new ArrayList<>();
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
         as = new ArrayList<>();
         chats = new ArrayList<>();
         dbHandler = new DBHandler(this, null, null, 1);
         items = new ArrayList<String>();
         listView = (ListView) findViewById(R.id.listView);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                if(isNetworkAvailable())
+                    new rfsh().execute();
+                else {
+                    swipeRefreshLayout.setRefreshing(false);
+                    Toast.makeText(MainActivity.this, "Please check your network connection", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         if(isNetworkAvailable()){
             firebaseAuth = FirebaseAuth.getInstance();
             databaseReference = FirebaseDatabase.getInstance().getReference();
@@ -284,6 +298,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            swipeRefreshLayout.setRefreshing(false);
             super.onPostExecute(aVoid);
         }
     }
@@ -313,10 +328,6 @@ public class MainActivity extends AppCompatActivity {
                 else{
                     Toast.makeText(MainActivity.this, "Please check your network connection", Toast.LENGTH_SHORT).show();
                 }
-                break;
-            case R.id.buttonRfsh:
-                Toast.makeText(MainActivity.this, "Loading content, please wait...", Toast.LENGTH_SHORT).show();
-                new rfsh().execute();
                 break;
         }
         return true;
